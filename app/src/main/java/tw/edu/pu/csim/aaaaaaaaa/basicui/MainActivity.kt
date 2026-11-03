@@ -1,52 +1,43 @@
 package tw.edu.pu.csim.aaaaaaaaa.basicui
 
+import android.net.Uri
 import android.os.Bundle
+import android.widget.MediaController
 import android.widget.Toast
+import android.widget.VideoView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.DrawableRes
+import androidx.annotation.RawRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import tw.edu.pu.csim.aaaaaaaaa.basicui.ui.theme.BasicUITheme
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.ui.platform.LocalContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,31 +57,42 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Main(modifier: Modifier = Modifier) {
-    Box {
+    Box(modifier = modifier) {
         LazyColumnExample(modifier)
         ColumnExample(modifier)
         TextFieldExample(modifier)
-        LazyRowExample(modifier)
+
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // 整合影片切換與播放畫面
+            VideoSwitcherScreen()
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 橫向動物捲動元件
+            LazyRowExample()
+        }
     }
 }
 
 @Composable
-fun LazyColumnExample(x0: Modifier) {
-    LazyColumn (modifier = Modifier.fillMaxSize(),
+fun LazyColumnExample(modifier: Modifier = Modifier) {
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
-    ){
-        // Add a single item
+    ) {
         item {
             Text(text = "標題列")
         }
 
-        // Add 50 items
         items(50) { index ->
             Text(text = "$index")
         }
 
-        // Add another single item
         item {
             Text(text = "結尾列")
         }
@@ -101,17 +103,8 @@ fun LazyColumnExample(x0: Modifier) {
 @Composable
 fun GreetingPreview() {
     BasicUITheme {
-        Greeting("Android")
+        // 如果 Greeting 尚未實作可先用其他預覽代替
     }
-}
-
-@Composable
-fun Greeting(x0: String) {
-    TODO("Not yet implemented")
-}
-
-fun detectTapGestures(function: () -> Unit) {
-    TODO("Not yet implemented")
 }
 
 @Composable
@@ -121,18 +114,12 @@ fun ColumnExample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0x8AE0BBE4))
+            .background(Color(0xffE0BBE4))
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onTap = {
-                        message = "短按"
-                    },
-                    onDoubleTap = {
-                        message = "連按兩下"
-                    },
-                    onLongPress = {
-                        message = "長按"
-                    }
+                    onTap = { message = "短按" },
+                    onDoubleTap = { message = "連按兩下" },
+                    onLongPress = { message = "長按" }
                 )
             },
         verticalArrangement = Arrangement.Top,
@@ -143,8 +130,7 @@ fun ColumnExample(modifier: Modifier = Modifier) {
         Text(text = message)
 
         Spacer(modifier = Modifier.height(8.dp))
-        RowExample(modifier)
-
+        RowExample()
     }
 }
 
@@ -173,7 +159,6 @@ fun RowExample(modifier: Modifier = Modifier) {
 
 @Composable
 fun TextFieldExample(modifier: Modifier = Modifier) {
-    // 管理輸入框的文字狀態
     var inputText by remember { mutableStateOf("") }
 
     Column(
@@ -204,7 +189,6 @@ data class Animal(
 
 @Composable
 fun LazyRowExample(modifier: Modifier = Modifier) {
-    // 1. 變數宣告放在 listOf 外部
     val context = LocalContext.current
 
     val animals = listOf(
@@ -221,15 +205,15 @@ fun LazyRowExample(modifier: Modifier = Modifier) {
     )
 
     LazyRow(
-        modifier = Modifier.fillMaxHeight(),
+        modifier = Modifier.height(260.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         itemsIndexed(animals) { index, animal ->
-            // 2. 將 Column 放入 Card 內部
             Card(
                 modifier = Modifier
-                    .fillParentMaxWidth(1.0f)
-                    .height(260.dp),
+                    .width(200.dp)
+                    .height(240.dp)
+                    .padding(horizontal = 4.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = Color(0xFFD0BCFF)
@@ -244,9 +228,8 @@ fun LazyRowExample(modifier: Modifier = Modifier) {
                         painter = painterResource(id = animal.imageRes),
                         contentDescription = animal.name,
                         modifier = Modifier
-                            .size(150.dp)
+                            .size(130.dp)
                             .clickable {
-                                // 點擊時跳出 Toast 訊息
                                 Toast.makeText(
                                     context,
                                     "您點選的是 ${animal.name}",
@@ -262,6 +245,53 @@ fun LazyRowExample(modifier: Modifier = Modifier) {
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun VideoSwitcherScreen(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
+    // 使用 remember 記錄目前是否為 love 影片
+    var isLoveVideo by remember { mutableStateOf(true) }
+
+    // 根據狀態選擇對應的 raw 資源 ID（請確保 res/raw 底下有 love.mp4 與 handpan.mp4）
+    val currentVideoRes = if (isLoveVideo) {
+        R.raw.love
+    } else {
+        R.raw.handpan
+    }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // 使用 AndroidView 嵌入 VideoView 播放影片
+        AndroidView(
+            factory = { ctx ->
+                VideoView(ctx).apply {
+                    setMediaController(MediaController(ctx))
+                }
+            },
+            update = { videoView ->
+                val uri = Uri.parse("android.resource://${context.packageName}/$currentVideoRes")
+                videoView.setVideoURI(uri)
+                videoView.start()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 切換按鈕
+        Button(onClick = {
+            isLoveVideo = !isLoveVideo
+        }) {
+            Text(text = if (isLoveVideo) "切換至手碟影片" else "切換至Love影片")
         }
     }
 }
